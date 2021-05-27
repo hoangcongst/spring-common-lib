@@ -30,4 +30,11 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>spring-common-lib</id>
+            <name>Spring Common Lib</name>
+            <url>https://maven.pkg.github.com/hoangcongst/spring-common-lib</url>
+        </repository>
+    </distributionManagement>
 </project>
