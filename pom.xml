@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
-    <artifactId>conght-common</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>com.hoangcongst</groupId>
+    <artifactId>spring-common-lib</artifactId>
+    <version>1.0.0</version>
     <dependencies>
         <dependency>
             <groupId>org.springframework.data</groupId>
@@ -32,8 +32,8 @@
 
     <distributionManagement>
         <repository>
-            <id>spring-common-lib</id>
-            <name>Spring Common Lib</name>
+            <id>github</id>
+            <name>GitHub Packages</name>
             <url>https://maven.pkg.github.com/hoangcongst/spring-common-lib</url>
         </repository>
     </distributionManagement>
