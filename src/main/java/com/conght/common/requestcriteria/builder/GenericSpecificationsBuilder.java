@@ -4,11 +4,7 @@ import com.conght.common.requestcriteria.util.SearchOperation;
 import com.conght.common.requestcriteria.util.SpecSearchCriteria;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -46,8 +42,12 @@ public class GenericSpecificationsBuilder<U> {
         return this;
     }
 
-    public Specification<U> build(Function<SpecSearchCriteria, Specification<U>> converter) {
+    public final GenericSpecificationsBuilder<U> with(List<SpecSearchCriteria> specSearchCriteriaList) {
+        params.addAll(specSearchCriteriaList);
+        return this;
+    }
 
+    public Specification<U> build(Function<SpecSearchCriteria, Specification<U>> converter) {
         if (params.size() == 0) {
             return null;
         }
@@ -74,7 +74,6 @@ public class GenericSpecificationsBuilder<U> {
         if(postFixedExprStack.size() == 0)
             return null;
         Deque<Specification<U>> specStack = new LinkedList<>();
-
         Collections.reverse((List<?>) postFixedExprStack);
 
         while (!postFixedExprStack.isEmpty()) {
@@ -92,7 +91,6 @@ public class GenericSpecificationsBuilder<U> {
                     specStack.push(Specification.where(operand1)
                         .or(operand2));
             }
-
         }
         return specStack.pop();
     }

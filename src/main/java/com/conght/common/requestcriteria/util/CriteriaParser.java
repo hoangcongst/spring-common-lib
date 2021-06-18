@@ -78,23 +78,23 @@ public class CriteriaParser {
      * @param reqObject
      * @return
      */
-    public Deque<?> parse(Object reqObject) {
-        Deque<Object> output = new LinkedList<>();
+    public List<SpecSearchCriteria> parse(Object reqObject) {
+        List<SpecSearchCriteria> output = new LinkedList<>();
         try {
             Map<String, Object> properties = this.showFields(reqObject);
             properties.forEach((k, v) -> {
                 if(v != null && !k.equals("page") && !k.equals("size") && !k.equals("class")) {
                     if(v instanceof Number)
-                        output.push(new SpecSearchCriteria(k, SearchOperation.EQUALITY, v));
+                        output.add(new SpecSearchCriteria(k, SearchOperation.EQUALITY, v));
                     else {
                         Matcher matcher = SimpleCriteriaRegex.matcher((CharSequence) v);
                         while (matcher.find()) {
-                            output.push(new SpecSearchCriteria(k, matcher.group(1) != null ?
+                            output.add(new SpecSearchCriteria(k, matcher.group(1) != null ?
                                     SearchOperation.getSimpleOperation(matcher.group(1).charAt(0)) : SearchOperation.EQUALITY,
                                     matcher.group(2)));
                         }
                     }
-                }
+                }  
             });
         } catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
