@@ -1,14 +1,13 @@
 package com.conght.common.requestcriteria.util;
 
+import com.conght.common.CommonUtil;
 import com.conght.common.database.interceptor.EntityUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -34,22 +33,28 @@ public class RequestPropertiesUtil {
 
     private static void handleRelationshipProperty(Field fieldInEntity, Object mRequest, Object mEntity) {
         try {
-            if (fieldInEntity.get(mEntity) instanceof Collection) {
-                Object listIds = getObjectFromFieldAndRequest(fieldInEntity, mRequest);
-                List<Object> listObjectFromIds = new ArrayList<>();
-                assert listIds != null;
-                ((Collection<?>) listIds).forEach(item -> {
-                    Long itemId = getIdFromObjectIfExist();
-                    if (itemId != null)
-                        listObjectFromIds.add();
-                });
-                setValueIntoEntity(fieldInEntity, , mEntity);
-            } else {
-                Object objFromRequest = getObjectFromFieldAndRequest(fieldInEntity, mRequest);
-                setValueIntoEntity(fieldInEntity, objFromRequest, mEntity);
+            Method getFieldInEntity = mEntity.getClass().getMethod("get"
+                    + fieldInEntity.getName().substring(0, 1).toUpperCase()
+                    + fieldInEntity.getName().substring(1));
+            Object fieldObjectInEntity = getFieldInEntity.invoke(mEntity);
+            boolean isListId =  fieldObjectInEntity instanceof Collection;
+
+            String suffixId = isListId ? "Ids" : "Id";
+            String fieldName = fieldInEntity.getName().substring(0, fieldInEntity.getName().length() - 1) + suffixId;
+            Constructor<?> constructor = null;
+            if(!isListId)
+                constructor = fieldInEntity.getType().getConstructor();
+            else {
+                ParameterizedType pt = (ParameterizedType) fieldInEntity.getGenericType();
+                var classField = pt.getActualTypeArguments()[0];
+                Class<?> cls = (Class<?>) classField;
+                constructor = cls.getConstructor();
             }
-        } catch (NoSuchMethodException ignored) {
-        } catch (InvocationTargetException | IllegalAccessException e) {
+
+            Object listObjectFromIds = getObjectFromFieldAndRequest(fieldName, constructor,
+                    mRequest, isListId);
+            setValueIntoEntity(fieldInEntity, listObjectFromIds, mEntity);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             e.printStackTrace();
         }
     }
@@ -68,18 +73,32 @@ public class RequestPropertiesUtil {
     }
 
     /**
-     * @param fieldInEntity        - The field of current entity
-     * @param mRequest - Request object
+     * @param fieldName - The field of current entity
+     * @param mRequest      - Request object
      * @return the object which is the value of entity, which contain the Id get from request
      */
-    private static Object getObjectFromFieldAndRequest(Field fieldInEntity, Object mRequest) {
+    private static Object getObjectFromFieldAndRequest(String fieldName, Constructor<?> constructorField
+            , Object mRequest, boolean isListId) {
         try {
-            Method getterIdMethodFromRequest = mRequest.getClass().getMethod("get"
-                    + fieldInEntity.getName().substring(0, 1).toUpperCase()
-                    + fieldInEntity.getName().substring(1) + "Id");
+            Method getterIdMethodFromRequest = mRequest.getClass().getMethod(
+                    "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1));
             Object idFromRequest = getterIdMethodFromRequest.invoke(mRequest);
-            return newInstanceFromReflect(fieldInEntity, idFromRequest,
-                    mRequest.getClass().getDeclaredField(fieldInEntity.getName() + "Id").getType());
+            if (isListId) {
+                List<Object> listObjectFromIds = new ArrayList<>();
+                assert idFromRequest != null;
+                ((Collection<?>) idFromRequest).forEach(id -> {
+                    if (id != null) {
+                        try {
+                            listObjectFromIds.add(newInstanceFromReflect(constructorField, id, id.getClass()));
+                        } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException | InstantiationException | NoSuchFieldException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                return listObjectFromIds;
+            }
+            return newInstanceFromReflect(constructorField, idFromRequest,
+                    mRequest.getClass().getDeclaredField(fieldName).getType());
         } catch (NoSuchMethodException | NoSuchFieldException ignored) {
         } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
             e.printStackTrace();
@@ -87,11 +106,16 @@ public class RequestPropertiesUtil {
         return null;
     }
 
-    private static Object newInstanceFromReflect(Field fieldInEntity, Object idFromRequest, Class<?> idType) throws InvocationTargetException,
+    private static Object newInstanceFromReflect(Constructor<?> constructor, Object idFromRequest, Class<?> idType) throws InvocationTargetException,
             IllegalAccessException, NoSuchMethodException, InstantiationException, NoSuchFieldException {
         // Create a new instance
-        Object relationshipProperty = fieldInEntity.getType().getConstructor(new Class[]{}).newInstance();
-        Method setterNewObj = relationshipProperty.getClass().getMethod("setId", idType);
+        Object relationshipProperty = constructor.newInstance();
+        Method setterNewObj;
+        try {
+            setterNewObj = relationshipProperty.getClass().getMethod("setId", CommonUtil.WRAPPER_TYPE_MAP.get(idType));
+        } catch (NoSuchMethodException noSuchMethodException) {
+            setterNewObj = relationshipProperty.getClass().getMethod("setId", idType);
+        }
         // Invoke the setter for the name field with a value
         setterNewObj.invoke(relationshipProperty, idFromRequest);
         return relationshipProperty;
