@@ -11,7 +11,7 @@
     </parent>
     <groupId>com.hoangcongst</groupId>
     <artifactId>spring-common-lib</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <dependencies>
         <dependency>
             <groupId>org.springframework.data</groupId>
