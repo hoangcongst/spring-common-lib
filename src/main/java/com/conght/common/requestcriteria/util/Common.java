@@ -1,6 +1,13 @@
 package com.conght.common.requestcriteria.util;
 
 public class Common {
+    public static <Y> Y getObjectFromTypeAndValueString(Class<Y> cls, String value) {
+        if (float.class.equals(cls) || Float.class.equals(cls)) {
+            return null;
+        }
+        return null;
+    }
+
     public static String convertCamelToSnake(String str) {
         StringBuilder result = new StringBuilder();
         char c = str.charAt(0);

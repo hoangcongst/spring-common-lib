@@ -59,7 +59,6 @@ public class CriteriaParser {
                     output.push(stack.pop());
                 stack.pop();
             } else {
-
                 Matcher matcher = SpecCriteriaRegex.matcher(token);
                 while (matcher.find()) {
                     output.push(new SpecSearchCriteria(matcher.group(1), matcher.group(2), matcher.group(3), matcher.group(4), matcher.group(5)));
@@ -75,6 +74,7 @@ public class CriteriaParser {
 
     /**
      * parse value for request object to push into criteria
+     *
      * @param reqObject
      * @return
      */
@@ -83,18 +83,20 @@ public class CriteriaParser {
         try {
             Map<String, Object> properties = this.showFields(reqObject);
             properties.forEach((k, v) -> {
-                if(v != null && !k.equals("page") && !k.equals("size") && !k.equals("class")) {
-                    if(v instanceof Number)
+                if (v != null && !k.equals("page") && !k.equals("size") && !k.equals("class")) {
+                    if (v instanceof Number)
                         output.add(new SpecSearchCriteria(k, SearchOperation.EQUALITY, v));
-                    else {
-                        Matcher matcher = SimpleCriteriaRegex.matcher((CharSequence) v);
-                        while (matcher.find()) {
-                            output.add(new SpecSearchCriteria(k, matcher.group(1) != null ?
-                                    SearchOperation.getSimpleOperation(matcher.group(1).charAt(0)) : SearchOperation.EQUALITY,
-                                    matcher.group(2)));
-                        }
+                    else if (v instanceof Collection) {
+                        output.add(new SpecSearchCriteria(k, SearchOperation.IN, v));
+                    } else {
+                        String valueToString = v.toString();
+                        boolean isContainOperation = Arrays.stream(SearchOperation.SIMPLE_OPERATION_SET)
+                                .anyMatch(charOperation -> valueToString.substring(0, 1).equals(charOperation));
+                        output.add(new SpecSearchCriteria(k, isContainOperation ?
+                                SearchOperation.getSimpleOperation(valueToString.charAt(0)) : SearchOperation.EQUALITY,
+                                isContainOperation ? valueToString.substring(1) : valueToString));
                     }
-                }  
+                }
             });
         } catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();

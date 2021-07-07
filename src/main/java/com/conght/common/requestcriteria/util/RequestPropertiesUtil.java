@@ -77,7 +77,7 @@ public class RequestPropertiesUtil {
      * @param mRequest      - Request object
      * @return the object which is the value of entity, which contain the Id get from request
      */
-    private static Object getObjectFromFieldAndRequest(String fieldName, Constructor<?> constructorField
+    public static Object getObjectFromFieldAndRequest(String fieldName, Constructor<?> constructorField
             , Object mRequest, boolean isListId) {
         try {
             Method getterIdMethodFromRequest = mRequest.getClass().getMethod(
@@ -106,7 +106,7 @@ public class RequestPropertiesUtil {
         return null;
     }
 
-    private static Object newInstanceFromReflect(Constructor<?> constructor, Object idFromRequest, Class<?> idType) throws InvocationTargetException,
+    public static Object newInstanceFromReflect(Constructor<?> constructor, Object idFromRequest, Class<?> idType) throws InvocationTargetException,
             IllegalAccessException, NoSuchMethodException, InstantiationException, NoSuchFieldException {
         // Create a new instance
         Object relationshipProperty = constructor.newInstance();

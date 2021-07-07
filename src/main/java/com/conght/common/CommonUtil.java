@@ -1,14 +1,15 @@
 package com.conght.common;
 
-import java.sql.Date;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class CommonUtil {
     private static final Set<Class<?>> WRAPPER_TYPES = new HashSet<>(Arrays.asList(
             Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class, Void.class));
     private static final Set<Class<?>> GENERAL_TYPES = new HashSet<>(Arrays.asList(
-            String.class, Date.class, Timestamp.class));
+            String.class, Date.class, Timestamp.class, java.sql.Date.class));
 
     public static boolean isWrapperType(Class<?> clazz) {
         return WRAPPER_TYPES.contains(clazz);
